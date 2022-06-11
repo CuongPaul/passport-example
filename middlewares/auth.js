@@ -1,3 +1,5 @@
 import passport from 'passport';
 
-export default passport.authenticate('jwt', { session: false, failWithError: true });
+const auth = passport.authenticate('jwt', { session: false, failWithError: true });
+
+export default auth;

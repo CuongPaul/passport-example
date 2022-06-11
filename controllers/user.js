@@ -4,7 +4,14 @@ import JWTR from 'jwt-redis';
 import User from '../models/user.js';
 import { getQueryByField, OPERATORS } from '../utils/query.js';
 
-const jwtr = new JWTR.default(redis.createClient({ host: '127.0.0.1', port: '6379' }));
+const jwtr = new JWTR.default(
+    redis.createClient({
+        port: '15530',
+        username: 'default',
+        password: '0DExjB3pqX6PI962oHGdppLGnn8cFiSp',
+        host: 'redis-15530.c9.us-east-1-4.ec2.cloud.redislabs.com',
+    })
+);
 
 export const getUser = async (req, res, next) => {
     const { id } = req.params;
