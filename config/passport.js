@@ -1,22 +1,18 @@
-import { Strategy as JWTStrategy, ExtractJwt } from 'passport-jwt';
+import { Strategy, ExtractJwt } from 'passport-jwt';
 
 import User from '../models/user.js';
 
 const jwtOptions = {
     secretOrKey: 'secret_key',
-    jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('jwt'),
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 };
 
-export default new JWTStrategy(jwtOptions, (payload, next) => {
-    User.findOne({ email: payload.email }, (err, user) => {
-        if (err) {
-            return next(err, false);
-        }
+export default new Strategy(jwtOptions, async (jwt_payload, done) => {
+    const user = await User.findOne({ email: jwt_payload.email });
 
-        if (user) {
-            return next(null, user);
-        } else {
-            return next(null, false);
-        }
-    });
+    if (user) {
+        done(null, user);
+    } else {
+        done(null, false);
+    }
 });

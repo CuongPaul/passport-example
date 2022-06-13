@@ -2,7 +2,6 @@ import redis from 'redis';
 import JWTR from 'jwt-redis';
 
 import User from '../models/user.js';
-import { getQueryByField, OPERATORS } from '../utils/query.js';
 
 const jwtr = new JWTR.default(
     redis.createClient({
@@ -95,32 +94,24 @@ export const logoutUser = (req, res) => {
 export const updateUser = async (req, res, next) => {
     try {
         const user = req.body;
-
         if (!user._id) return res.status(400).send({ message: 'User ID is missed.' });
 
         if (user.name) {
             const existingUser = await User.findOne({ name: user.name });
-            if (user._id !== existingUser._id) {
+
+            if (existingUser && user._id !== existingUser._id) {
                 res.status(400).send({
                     message: 'This username is already in use. Please try another one.',
                 });
             }
         }
 
-        delete user.email;
-        delete user.wallet;
-        delete user.password;
+        const newUser = await User.findByIdAndUpdate(user._id, user);
 
-        const filter = { _id: getQueryByField(OPERATORS.EQ, user._id) };
+        let userUpdated = await User.findById(newUser._id);
+        delete userUpdated.password;
 
-        await User.findOneAndUpdate(filter, user);
-
-        let newUser = await User.findOne(filter);
-
-        newUser = newUser.toObject();
-        delete newUser.password;
-
-        res.json({ message: 'User updated successfully!', user: newUser });
+        res.json({ message: 'User updated successfully!', user: userUpdated });
     } catch (e) {
         next(e);
     }

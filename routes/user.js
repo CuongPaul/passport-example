@@ -15,7 +15,7 @@ const useRouter = express.Router();
 useRouter.get('/:id', getUser);
 useRouter.post('/login', loginUser);
 useRouter.post('/register', registerUser);
-useRouter.get('/logout', auth, logoutUser);
+useRouter.post('/logout', auth, logoutUser);
 useRouter.post('/update', auth, updateUser);
 useRouter.delete('/:wallet', auth, deleteUser);
 
