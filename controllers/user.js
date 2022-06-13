@@ -3,14 +3,7 @@ import JWTR from 'jwt-redis';
 
 import User from '../models/user.js';
 
-const jwtr = new JWTR.default(
-    redis.createClient({
-        port: '15530',
-        username: 'default',
-        password: '0DExjB3pqX6PI962oHGdppLGnn8cFiSp',
-        host: 'redis-15530.c9.us-east-1-4.ec2.cloud.redislabs.com',
-    })
-);
+const jwtr = new JWTR.default(redis.createClient({ host: '127.0.0.1', port: '6379' }));
 
 export const getUser = async (req, res, next) => {
     const { id } = req.params;
@@ -30,7 +23,7 @@ export const getUser = async (req, res, next) => {
 };
 
 export const loginUser = (req, res, next) => {
-    const { email, password } = req.body;
+    const { email, wallet, password } = req.body;
 
     User.findOne({ email }, (err, user) => {
         if (err) return next(err);
@@ -44,8 +37,8 @@ export const loginUser = (req, res, next) => {
             if (!isMatch)
                 return res.status(422).json({ message: 'Email or password is not correct!' });
 
-            jwtr.sign({ email, wallet: user.wallet }, 'secret_key', {
-                expiresIn: 60 * 120,
+            jwtr.sign({ email, wallet }, 'secret_key', {
+                expiresIn: 2 * 60 * 1000,
             })
                 .then((token) => {
                     user = user.toObject();
@@ -82,9 +75,14 @@ export const deleteUser = async (req, res, next) => {
     }
 };
 
-export const logoutUser = (req, res) => {
+export const logoutUser = async (req, res) => {
     if (req.headers.authorization) {
-        jwtr.destroy(req.headers.authorization.replace('JWT ', '')).finally(() => {
+        const payload = await jwtr.verify(
+            req.headers.authorization.replace('Bearer ', ''),
+            'secret_key'
+        );
+
+        jwtr.destroy(payload.jti, 'secret_key').finally(() => {
             req.logout();
             res.json({ message: 'Success' });
         });
